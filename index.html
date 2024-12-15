@@ -287,6 +287,7 @@
                     clearInterval(this.countdownInterval);
                 },
                 togglePolling() {
+                    localStorage.setItem('pollingActive', this.pollingActive);
                     if (this.pollingActive) {
                         this.startPolling();
                     } else {
@@ -295,9 +296,11 @@
                 },
                 init() {
                     const storedApiKey = localStorage.getItem('githubApiKey');
+                    const storedPollingActive = localStorage.getItem('pollingActive');
                     if (storedApiKey) {
                         this.apiKey = storedApiKey;
                         this.apiKeyInput = storedApiKey;
+                        this.pollingActive = storedPollingActive !== 'false';
                         this.fetchWorkflows();
                         this.startPolling();
                     }
