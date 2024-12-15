@@ -95,7 +95,7 @@
         </div>
         <div x-show="!apiKey">
             <label for="apiKey">GitHub API Key:</label>
-            <input type="text" id="apiKey" x-model="apiKey" @keydown.enter="setApiKey">
+            <input type="text" id="apiKey" x-model="apiKeyInput" @keydown.enter="setApiKey">
             <button @click="setApiKey">Set API Key</button>
             <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
         </div>
@@ -142,12 +142,14 @@
         function githubActionsStatus() {
             return {
                 apiKey: '',
+                apiKeyInput: '',
                 workflows: [],
                 errorMessage: '',
                 pollInterval: 10000, // Polling interval in milliseconds
                 countdown: 10, // Countdown timer in seconds
                 branches: ['trunk', '6.7', '6.6', '6.5', '6.4', '6.3', '6.2', '6.1', '6.0', '5.9', '5.8', '5.7', '5.6', '5.5', '5.4', '5.3', '5.2', '5.1', '5.0', '4.9', '4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1'], // Branch names array
                 setApiKey() {
+                    this.apiKey = this.apiKeyInput;
                     localStorage.setItem('githubApiKey', this.apiKey);
                     this.fetchWorkflows();
                     this.startPolling();
@@ -155,6 +157,7 @@
                 clearApiKey() {
                     localStorage.removeItem('githubApiKey');
                     this.apiKey = '';
+                    this.apiKeyInput = '';
                     this.errorMessage = '';
                     clearInterval(this.pollingInterval);
                     clearInterval(this.countdownInterval);
@@ -274,6 +277,7 @@
                     const storedApiKey = localStorage.getItem('githubApiKey');
                     if (storedApiKey) {
                         this.apiKey = storedApiKey;
+                        this.apiKeyInput = storedApiKey;
                         this.fetchWorkflows();
                         this.startPolling();
                     }
