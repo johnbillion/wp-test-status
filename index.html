@@ -57,8 +57,10 @@
                         </td>
                         <template x-for="branch in branches" :key="branch">
                             <td :class="getStatusClass(workflow.statuses[branch]?.status)">
-                                <div x-text="workflow.statuses[branch]?.status || 'Waiting...'"></div>
-                                <div x-text="workflow.statuses[branch]?.date || ''"></div>
+                                <a :href="`https://github.com/wordpress/wordpress-develop/actions/workflows/${workflow.fileName}?query=branch%3A${branch}`" target="_blank">
+                                    <div x-text="workflow.statuses[branch]?.status || 'Waiting...'"></div>
+                                    <div x-text="workflow.statuses[branch]?.date || ''"></div>
+                                </a>
                             </td>
                         </template>
                     </tr>
