@@ -35,7 +35,6 @@
             <thead>
                 <tr>
                     <th>Workflow</th>
-                    <th>File Name</th>
                     <template x-for="branch in branches" :key="branch">
                         <th x-text="branch"></th>
                     </template>
@@ -44,8 +43,10 @@
             <tbody>
                 <template x-for="workflow in workflows" :key="workflow.id">
                     <tr>
-                        <td x-text="workflow.name"></td>
-                        <td x-text="workflow.fileName"></td>
+                        <td>
+                            <div x-text="workflow.name"></div>
+                            <div x-text="workflow.fileName"></div>
+                        </td>
                         <template x-for="branch in branches" :key="branch">
                             <td :class="getStatusClass(workflow.statuses[branch]?.status)">
                                 <div x-text="workflow.statuses[branch]?.status || 'Waiting...'"></div>
