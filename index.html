@@ -30,6 +30,7 @@
             <label for="apiKey">API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
             <button @click="setApiKey">Set API Key</button>
+            <button @click="clearApiKey" x-show="apiKey">Clear API Key</button>
             <div x-show="!apiKey">
                 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Generate API Key</a>
                 <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
@@ -85,6 +86,14 @@
                 setApiKey() {
                     localStorage.setItem('githubApiKey', this.apiKey);
                     this.fetchWorkflows();
+                },
+                clearApiKey() {
+                    localStorage.removeItem('githubApiKey');
+                    this.apiKey = '';
+                    this.workflows = [];
+                    this.errorMessage = '';
+                    clearInterval(this.pollingInterval);
+                    clearInterval(this.countdownInterval);
                 },
                 async fetchWorkflows() {
                     this.errorMessage = ''; // Clear previous error message
@@ -186,7 +195,7 @@
                         this.apiKey = storedApiKey;
                         this.fetchWorkflows();
                     }
-                    setInterval(() => {
+                    this.pollingInterval = setInterval(() => {
                         if (this.apiKey) {
                             this.updateStatuses({
                                 'Authorization': `token ${this.apiKey}`
@@ -194,7 +203,7 @@
                         }
                     }, this.pollInterval); // Poll every pollInterval milliseconds
 
-                    setInterval(() => {
+                    this.countdownInterval = setInterval(() => {
                         if (this.apiKey && this.countdown > 0) {
                             this.countdown--;
                         } else if (this.apiKey) {
