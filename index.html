@@ -182,12 +182,11 @@
                         'Content-Type': 'application/json'
                     };
 
-                    const query = `
-                    {
-                        repository(owner: "wordpress", name: "wordpress-develop") {
-                            refs(refPrefix: "refs/heads/", first: 100) {
-                                nodes {
-                                    name
+                    const fetchPromises = this.branches.map(branch => {
+                        const query = `
+                        {
+                            repository(owner: "wordpress", name: "wordpress-develop") {
+                                ref(qualifiedName: "refs/heads/${branch}") {
                                     target {
                                         ... on Commit {
                                             history(first: 1) {
@@ -207,47 +206,35 @@
                                     }
                                 }
                             }
-                        }
-                    }`;
+                        }`;
 
-                    try {
-                        const response = await fetch('https://api.github.com/graphql', {
+                        return fetch('https://api.github.com/graphql', {
                             method: 'POST',
                             headers: headers,
                             body: JSON.stringify({ query })
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.message);
-                        }
-
-                        const data = await response.json();
-                        const branchesData = data.data.repository.refs.nodes;
-
-                        const workflows = whitelist.map(fileName => ({
-                            id: fileName,
-                            name: fileName.split('/').pop().replace('.yml', '').replace(/-/g, ' '),
-                            fileName: fileName.split('/').pop(),
-                            statuses: {}
-                        }));
-
-                        branchesData.forEach(branch => {
-                            const branchName = branch.name;
-                            const statusContexts = branch.target.history.nodes[0].status.contexts;
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            const branchData = data.data.repository.ref.target.history.nodes[0];
+                            const statusContexts = branchData.status.contexts;
 
                             statusContexts.forEach(context => {
-                                const workflow = workflows.find(w => w.fileName === context.context);
+                                const workflow = this.workflows.find(w => w.fileName === context.context);
                                 if (workflow) {
-                                    workflow.statuses[branchName] = {
+                                    workflow.statuses[branch] = {
                                         status: context.state,
                                         date: new Date(context.createdAt).toLocaleString()
                                     };
                                 }
                             });
+                        })
+                        .catch(error => {
+                            this.errorMessage = error.message;
                         });
+                    });
 
-                        this.workflows = workflows;
+                    try {
+                        await Promise.all(fetchPromises);
                     } catch (error) {
                         this.errorMessage = error.message;
                     }
@@ -272,19 +259,19 @@
                     return '';
                 },
                 startPolling() {
-                    this.pollingInterval = setInterval(() => {
-                        if (this.apiKey) {
-                            this.fetchWorkflows();
-                        }
-                    }, this.pollInterval); // Poll every pollInterval milliseconds
+                    // this.pollingInterval = setInterval(() => {
+                    //     if (this.apiKey) {
+                    //         this.fetchWorkflows();
+                    //     }
+                    // }, this.pollInterval); // Poll every pollInterval milliseconds
 
-                    this.countdownInterval = setInterval(() => {
-                        if (this.apiKey && this.countdown > 0) {
-                            this.countdown--;
-                        } else if (this.apiKey) {
-                            this.countdown = (this.pollInterval / 1000) - 1;
-                        }
-                    }, 1000); // Update countdown every second
+                    // this.countdownInterval = setInterval(() => {
+                    //     if (this.apiKey && this.countdown > 0) {
+                    //         this.countdown--;
+                    //     } else if (this.apiKey) {
+                    //         this.countdown = (this.pollInterval / 1000) - 1;
+                    //     }
+                    // }, 1000); // Update countdown every second
                 },
                 init() {
                     const storedApiKey = localStorage.getItem('githubApiKey');
