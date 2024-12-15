@@ -95,7 +95,7 @@
         </div>
         <div x-show="!apiKey">
             <label for="apiKey">GitHub API Key:</label>
-            <input type="text" id="apiKey" x-model="apiKey">
+            <input type="text" id="apiKey" x-model="apiKey" @keydown.enter="setApiKey">
             <button @click="setApiKey">Set API Key</button>
             <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
         </div>
