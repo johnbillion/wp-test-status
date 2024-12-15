@@ -86,6 +86,7 @@
                 setApiKey() {
                     localStorage.setItem('githubApiKey', this.apiKey);
                     this.fetchWorkflows();
+                    this.startPolling();
                 },
                 clearApiKey() {
                     localStorage.removeItem('githubApiKey');
@@ -188,12 +189,7 @@
                     }
                     return '';
                 },
-                init() {
-                    const storedApiKey = localStorage.getItem('githubApiKey');
-                    if (storedApiKey) {
-                        this.apiKey = storedApiKey;
-                        this.fetchWorkflows();
-                    }
+                startPolling() {
                     this.pollingInterval = setInterval(() => {
                         if (this.apiKey) {
                             this.updateStatuses({
@@ -209,6 +205,14 @@
                             this.countdown = (this.pollInterval / 1000) - 1;
                         }
                     }, 1000); // Update countdown every second
+                },
+                init() {
+                    const storedApiKey = localStorage.getItem('githubApiKey');
+                    if (storedApiKey) {
+                        this.apiKey = storedApiKey;
+                        this.fetchWorkflows();
+                        this.startPolling();
+                    }
                 }
             }
         }
