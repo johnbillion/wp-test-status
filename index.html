@@ -101,7 +101,9 @@
         </div>
         <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
         <div x-show="apiKey">
-            Next poll in: <span x-text="countdown"></span> seconds
+            <div x-show="pollingActive">
+                Next poll in: <span x-text="countdown"></span> seconds
+            </div>
         </div>
         <table x-show="apiKey">
             <thead>
@@ -136,6 +138,10 @@
             </tbody>
         </table>
         <button @click="clearApiKey" x-show="apiKey">Clear API Key</button>
+        <div x-show="apiKey">
+            <label for="pollingToggle">Polling Active:</label>
+            <input type="checkbox" id="pollingToggle" x-model="pollingActive" @change="togglePolling">
+        </div>
     </div>
 
     <script>
@@ -148,6 +154,7 @@
                 pollInterval: 10000, // Polling interval in milliseconds
                 countdown: 10, // Countdown timer in seconds
                 branches: ['trunk', '6.7', '6.6', '6.5', '6.4', '6.3', '6.2', '6.1', '6.0', '5.9', '5.8', '5.7', '5.6', '5.5', '5.4', '5.3', '5.2', '5.1', '5.0', '4.9', '4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1'], // Branch names array
+                pollingActive: true,
                 setApiKey() {
                     this.apiKey = this.apiKeyInput;
                     localStorage.setItem('githubApiKey', this.apiKey);
@@ -259,19 +266,32 @@
                     return '';
                 },
                 startPolling() {
-                    // this.pollingInterval = setInterval(() => {
-                    //     if (this.apiKey) {
-                    //         this.fetchWorkflows();
-                    //     }
-                    // }, this.pollInterval); // Poll every pollInterval milliseconds
+                    if (this.pollingActive) {
+                        this.pollingInterval = setInterval(() => {
+                            if (this.apiKey) {
+                                this.fetchWorkflows();
+                            }
+                        }, this.pollInterval); // Poll every pollInterval milliseconds
 
-                    // this.countdownInterval = setInterval(() => {
-                    //     if (this.apiKey && this.countdown > 0) {
-                    //         this.countdown--;
-                    //     } else if (this.apiKey) {
-                    //         this.countdown = (this.pollInterval / 1000) - 1;
-                    //     }
-                    // }, 1000); // Update countdown every second
+                        this.countdownInterval = setInterval(() => {
+                            if (this.apiKey && this.countdown > 0) {
+                                this.countdown--;
+                            } else if (this.apiKey) {
+                                this.countdown = (this.pollInterval / 1000) - 1;
+                            }
+                        }, 1000); // Update countdown every second
+                    }
+                },
+                stopPolling() {
+                    clearInterval(this.pollingInterval);
+                    clearInterval(this.countdownInterval);
+                },
+                togglePolling() {
+                    if (this.pollingActive) {
+                        this.startPolling();
+                    } else {
+                        this.stopPolling();
+                    }
                 },
                 init() {
                     const storedApiKey = localStorage.getItem('githubApiKey');
