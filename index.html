@@ -79,6 +79,11 @@
             height: 100%;
             padding: 8px;
         }
+        input[type="text"] {
+            padding: 3px;
+            font-size: 16px;
+            width: 200px;
+        }
     </style>
 </head>
 <body>
@@ -86,16 +91,13 @@
         <div x-show="!apiKey" class="welcome-message">
             <h1>Welcome to the GitHub Actions Status Dashboard</h1>
             <p>This dashboard allows you to monitor the status of GitHub Actions workflows for the WordPress development repository.</p>
-            <p>Please generate a GitHub API key and enter it below to get started.</p>
+            <p>Please <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">generate a GitHub API key</a> and enter it below to get started.</p>
         </div>
         <div x-show="!apiKey">
             <label for="apiKey">GitHub API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
             <button @click="setApiKey">Set API Key</button>
-            <div>
-                <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Generate API Key</a>
-                <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
-            </div>
+            <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
         </div>
         <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
         <div x-show="apiKey">
