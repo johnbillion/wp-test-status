@@ -11,6 +11,13 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
         }
         table {
             width: 100%;
@@ -72,7 +79,7 @@
     </style>
 </head>
 <body>
-    <div x-data="githubActionsStatus">
+    <div x-data="githubActionsStatus" class="container">
         <div>
             <label for="apiKey">API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
@@ -87,7 +94,12 @@
         <div x-show="apiKey">
             Next poll in: <span x-text="countdown"></span> seconds
         </div>
-        <table>
+        <div x-show="!apiKey" class="welcome-message">
+            <h1>Welcome to the GitHub Actions Status Dashboard</h1>
+            <p>This dashboard allows you to monitor the status of GitHub Actions workflows for the WordPress development repository.</p>
+            <p>Please generate a GitHub API key and enter it above to get started.</p>
+        </div>
+        <table x-show="apiKey">
             <thead>
                 <tr>
                     <th scope="col">Workflow</th>
