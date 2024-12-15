@@ -18,6 +18,10 @@
             background-color: orange;
             color: white;
         }
+        .header-failing {
+            background-color: red;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -36,14 +40,14 @@
                 <tr>
                     <th>Workflow</th>
                     <template x-for="branch in branches" :key="branch">
-                        <th x-text="branch"></th>
+                        <th :class="getHeaderClass(branch, 'column')" x-text="branch"></th>
                     </template>
                 </tr>
             </thead>
             <tbody>
                 <template x-for="workflow in workflows" :key="workflow.id">
                     <tr>
-                        <td>
+                        <td :class="getHeaderClass(workflow, 'row')">
                             <div x-text="workflow.name"></div>
                             <div x-text="workflow.fileName"></div>
                         </td>
@@ -157,6 +161,14 @@
                     } else {
                         return '';
                     }
+                },
+                getHeaderClass(item, type) {
+                    if (type === 'row') {
+                        return Object.values(item.statuses).some(status => status.status === 'failure') ? 'header-failing' : '';
+                    } else if (type === 'column') {
+                        return this.workflows.some(workflow => workflow.statuses[item]?.status === 'failure') ? 'header-failing' : '';
+                    }
+                    return '';
                 },
                 init() {
                     const storedApiKey = localStorage.getItem('githubApiKey');
