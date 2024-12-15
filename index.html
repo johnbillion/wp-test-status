@@ -90,7 +90,6 @@
                 clearApiKey() {
                     localStorage.removeItem('githubApiKey');
                     this.apiKey = '';
-                    this.workflows = [];
                     this.errorMessage = '';
                     clearInterval(this.pollingInterval);
                     clearInterval(this.countdownInterval);
