@@ -40,7 +40,9 @@
                 <tr>
                     <th>Workflow</th>
                     <template x-for="branch in branches" :key="branch">
-                        <th :class="getHeaderClass(branch, 'column')" x-text="branch"></th>
+                        <th :class="getHeaderClass(branch, 'column')">
+                            <a :href="`https://github.com/wordpress/wordpress-develop/actions?query=branch%3A${branch}`" x-text="branch" target="_blank"></a>
+                        </th>
                     </template>
                 </tr>
             </thead>
@@ -48,8 +50,10 @@
                 <template x-for="workflow in workflows" :key="workflow.id">
                     <tr>
                         <td :class="getHeaderClass(workflow, 'row')">
-                            <div x-text="workflow.name"></div>
-                            <div x-text="workflow.fileName"></div>
+                            <a :href="`https://github.com/wordpress/wordpress-develop/actions/workflows/${workflow.fileName}`" target="_blank">
+                                <div x-text="workflow.name"></div>
+                                <div x-text="workflow.fileName"></div>
+                            </a>
                         </td>
                         <template x-for="branch in branches" :key="branch">
                             <td :class="getStatusClass(workflow.statuses[branch]?.status)">
