@@ -30,9 +30,13 @@
             <label for="apiKey">API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
             <button @click="setApiKey">Set API Key</button>
+            <div x-show="!apiKey">
+                <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Generate API Key</a>
+                <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
+            </div>
         </div>
         <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
-        <div>
+        <div x-show="apiKey">
             Next poll in: <span x-text="countdown"></span> seconds
         </div>
         <table border="1">
@@ -191,9 +195,9 @@
                     }, this.pollInterval); // Poll every pollInterval milliseconds
 
                     setInterval(() => {
-                        if (this.countdown > 0) {
+                        if (this.apiKey && this.countdown > 0) {
                             this.countdown--;
-                        } else {
+                        } else if (this.apiKey) {
                             this.countdown = (this.pollInterval / 1000) - 1;
                         }
                     }, 1000); // Update countdown every second
