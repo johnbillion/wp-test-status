@@ -62,7 +62,7 @@
         .status-in-progress a {
             color: white;
         }
-        td a {
+        td a, th a {
             display: block;
             width: 100%;
             height: 100%;
@@ -89,9 +89,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>Workflow</th>
+                    <th scope="col">Workflow</th>
                     <template x-for="branch in branches" :key="branch">
-                        <th :class="getHeaderClass(branch, 'column')">
+                        <th :class="getHeaderClass(branch, 'column')" scope="col">
                             <a :href="`https://github.com/wordpress/wordpress-develop/actions?query=branch%3A${branch}`" x-text="branch" target="_blank"></a>
                         </th>
                     </template>
@@ -100,12 +100,12 @@
             <tbody>
                 <template x-for="workflow in workflows" :key="workflow.id">
                     <tr>
-                        <td :class="getHeaderClass(workflow, 'row')">
+                        <th :class="getHeaderClass(workflow, 'row')" scope="row">
                             <a :href="`https://github.com/wordpress/wordpress-develop/actions/workflows/${workflow.fileName}`" target="_blank">
                                 <div x-text="workflow.name"></div>
                                 <div x-text="workflow.fileName"></div>
                             </a>
-                        </td>
+                        </th>
                         <template x-for="branch in branches" :key="branch">
                             <td :class="getStatusClass(workflow.statuses[branch]?.status)">
                                 <a :href="`https://github.com/wordpress/wordpress-develop/actions/workflows/${workflow.fileName}?query=branch%3A${branch}`" target="_blank">
