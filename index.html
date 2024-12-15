@@ -17,6 +17,7 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
+            flex-direction: column;
         }
         .container {
             text-align: center;
@@ -87,11 +88,11 @@
             <p>This dashboard allows you to monitor the status of GitHub Actions workflows for the WordPress development repository.</p>
             <p>Please generate a GitHub API key and enter it below to get started.</p>
         </div>
-        <div>
+        <div x-show="!apiKey">
             <label for="apiKey">GitHub API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
             <button @click="setApiKey">Set API Key</button>
-            <div x-show="!apiKey">
+            <div>
                 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Generate API Key</a>
                 <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
             </div>
