@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Actions Status</title>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        .status-passing {
+            background-color: green;
+            color: white;
+        }
+        .status-failing {
+            background-color: red;
+            color: white;
+        }
+        .status-in-progress {
+            background-color: orange;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div x-data="githubActionsStatus">
+        <div>
+            <label for="apiKey">API Key:</label>
+            <input type="text" id="apiKey" x-model="apiKey">
+            <button @click="setApiKey">Set API Key</button>
+        </div>
+        <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
+        <div>
+            Next poll in: <span x-text="countdown"></span> seconds
+        </div>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Workflow</th>
+                    <th>File Name</th>
+                    <template x-for="branch in branches" :key="branch">
+                        <th x-text="branch"></th>
+                    </template>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="workflow in workflows" :key="workflow.id">
+                    <tr>
+                        <td x-text="workflow.name"></td>
+                        <td x-text="workflow.fileName"></td>
+                        <template x-for="branch in branches" :key="branch">
+                            <td :class="getStatusClass(workflow.statuses[branch]?.status)">
+                                <div x-text="workflow.statuses[branch]?.status || 'Waiting...'"></div>
+                                <div x-text="workflow.statuses[branch]?.date || ''"></div>
+                            </td>
+                        </template>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function githubActionsStatus() {
+            return {
+                apiKey: '',
+                workflows: [],
+                errorMessage: '',
+                pollInterval: 10000, // Polling interval in milliseconds
+                countdown: 10, // Countdown timer in seconds
+                branches: ['trunk', '6.7', '6.6', '6.5', '6.4', '6.3', '6.2', '6.1', '6.0', '5.9', '5.8', '5.7', '5.6', '5.5', '5.4', '5.3', '5.2', '5.1', '5.0', '4.9', '4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1'], // Branch names array
+                setApiKey() {
+                    localStorage.setItem('githubApiKey', this.apiKey);
+                    this.fetchWorkflows();
+                },
+                async fetchWorkflows() {
+                    this.errorMessage = ''; // Clear previous error message
+                    const repo = 'wordpress/wordpress-develop';
+                    const token = this.apiKey;
+                    const whitelist = [
+                        '.github/workflows/coding-standards.yml',
+                        '.github/workflows/end-to-end-tests.yml',
+                        '.github/workflows/install-testing.yml',
+                        '.github/workflows/javascript-tests.yml',
+                        '.github/workflows/local-docker-environment.yml',
+                        '.github/workflows/performance.yml',
+                        '.github/workflows/php-compatibility.yml',
+                        '.github/workflows/phpunit-tests.yml',
+                    ];
+
+                    const headers = {
+                        'Authorization': `token ${token}`
+                    };
+
+                    try {
+                        const workflowsResponse = await fetch(`https://api.github.com/repos/${repo}/actions/workflows`, { headers });
+                        if (!workflowsResponse.ok) {
+                            const errorData = await workflowsResponse.json();
+                            throw new Error(errorData.message);
+                        }
+                        const workflowsData = await workflowsResponse.json();
+                        const workflows = workflowsData.workflows
+                            .filter(workflow => whitelist.includes(workflow.path))
+                            .map(workflow => ({
+                                id: workflow.id,
+                                name: workflow.name,
+                                fileName: workflow.path.split('/').pop(),
+                                statuses: {}
+                            }));
+
+                        // Populate the table with workflow titles and empty values
+                        this.workflows = workflows;
+
+                        await this.updateStatuses(headers, repo);
+                    } catch (error) {
+                        this.errorMessage = error.message;
+                    }
+                },
+                async updateStatuses(headers, repo) {
+                    const fetchPromises = [];
+
+                    for (const branch of this.branches) {
+                        console.log(`Fetching runs for branch: ${branch}`);
+                        for (let i = 0; i < this.workflows.length; i++) {
+                            const workflow = this.workflows[i];
+                            const apiUrl = `https://api.github.com/repos/${repo}/actions/workflows/${workflow.id}/runs?branch=${branch}&per_page=1`;
+                            console.log(`API URL: ${apiUrl}`);
+                            fetchPromises.push(
+                                fetch(apiUrl, { headers })
+                                    .then(runsResponse => runsResponse.json())
+                                    .then(runsData => {
+                                        console.log(`Runs response for workflow ${workflow.name} on branch ${branch}:`, runsData);
+                                        if (!runsData.workflow_runs) {
+                                            throw new Error(runsData.message);
+                                        }
+                                        const latestRun = runsData.workflow_runs[0];
+                                        this.workflows[i].statuses[branch] = latestRun ? {
+                                            status: latestRun.conclusion,
+                                            date: new Date(latestRun.created_at).toLocaleString()
+                                        } : { status: 'unknown', date: '' };
+                                    })
+                                    .catch(error => {
+                                        this.errorMessage = error.message;
+                                    })
+                            );
+                        }
+                    }
+
+                    await Promise.all(fetchPromises);
+                },
+                getStatusClass(status) {
+                    if (status === 'success') {
+                        return 'status-passing';
+                    } else if (status === 'failure') {
+                        return 'status-failing';
+                    } else if (status === 'in_progress') {
+                        return 'status-in-progress';
+                    } else {
+                        return '';
+                    }
+                },
+                init() {
+                    const storedApiKey = localStorage.getItem('githubApiKey');
+                    if (storedApiKey) {
+                        this.apiKey = storedApiKey;
+                        this.fetchWorkflows();
+                    }
+                    setInterval(() => {
+                        if (this.apiKey) {
+                            this.updateStatuses({
+                                'Authorization': `token ${this.apiKey}`
+                            }, 'wordpress/wordpress-develop');
+                        }
+                    }, this.pollInterval); // Poll every pollInterval milliseconds
+
+                    setInterval(() => {
+                        if (this.countdown > 0) {
+                            this.countdown--;
+                        } else {
+                            this.countdown = (this.pollInterval / 1000) - 1;
+                        }
+                    }, 1000); // Update countdown every second
+                }
+            }
+        }
+    </script>
+</body>
+</html>
