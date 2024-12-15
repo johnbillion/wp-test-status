@@ -11,6 +11,8 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f9;
+        }
+        .centered {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -79,12 +81,16 @@
     </style>
 </head>
 <body>
-    <div x-data="githubActionsStatus" class="container">
+    <div x-data="githubActionsStatus" :class="{'centered': !apiKey}" class="container">
+        <div x-show="!apiKey" class="welcome-message">
+            <h1>Welcome to the GitHub Actions Status Dashboard</h1>
+            <p>This dashboard allows you to monitor the status of GitHub Actions workflows for the WordPress development repository.</p>
+            <p>Please generate a GitHub API key and enter it below to get started.</p>
+        </div>
         <div>
-            <label for="apiKey">API Key:</label>
+            <label for="apiKey">GitHub API Key:</label>
             <input type="text" id="apiKey" x-model="apiKey">
             <button @click="setApiKey">Set API Key</button>
-            <button @click="clearApiKey" x-show="apiKey">Clear API Key</button>
             <div x-show="!apiKey">
                 <a href="https://github.com/settings/personal-access-tokens/new" target="_blank">Generate API Key</a>
                 <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
@@ -93,11 +99,6 @@
         <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
         <div x-show="apiKey">
             Next poll in: <span x-text="countdown"></span> seconds
-        </div>
-        <div x-show="!apiKey" class="welcome-message">
-            <h1>Welcome to the GitHub Actions Status Dashboard</h1>
-            <p>This dashboard allows you to monitor the status of GitHub Actions workflows for the WordPress development repository.</p>
-            <p>Please generate a GitHub API key and enter it above to get started.</p>
         </div>
         <table x-show="apiKey">
             <thead>
@@ -131,6 +132,7 @@
                 </template>
             </tbody>
         </table>
+        <button @click="clearApiKey" x-show="apiKey">Clear API Key</button>
     </div>
 
     <script>
