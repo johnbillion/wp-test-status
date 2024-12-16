@@ -156,6 +156,16 @@
                 countdown: 10, // Countdown timer in seconds
                 branches: ['trunk', '6.7', '6.6', '6.5', '6.4', '6.3', '6.2', '6.1', '6.0', '5.9', '5.8', '5.7', '5.6', '5.5', '5.4', '5.3', '5.2', '5.1', '5.0', '4.9', '4.8', '4.7', '4.6', '4.5', '4.4', '4.3', '4.2', '4.1'], // Branch names array
                 pollingActive: true,
+                whitelist: [
+                    '.github/workflows/coding-standards.yml',
+                    '.github/workflows/end-to-end-tests.yml',
+                    '.github/workflows/install-testing.yml',
+                    '.github/workflows/javascript-tests.yml',
+                    '.github/workflows/local-docker-environment.yml',
+                    '.github/workflows/performance.yml',
+                    '.github/workflows/php-compatibility.yml',
+                    '.github/workflows/phpunit-tests.yml',
+                ],
                 setApiKey() {
                     this.apiKey = this.apiKeyInput;
                     localStorage.setItem('githubApiKey', this.apiKey);
@@ -174,16 +184,6 @@
                     this.errorMessage = ''; // Clear previous error message
                     const repo = 'wordpress/wordpress-develop';
                     const token = this.apiKey;
-                    const whitelist = [
-                        '.github/workflows/coding-standards.yml',
-                        '.github/workflows/end-to-end-tests.yml',
-                        '.github/workflows/install-testing.yml',
-                        '.github/workflows/javascript-tests.yml',
-                        '.github/workflows/local-docker-environment.yml',
-                        '.github/workflows/performance.yml',
-                        '.github/workflows/php-compatibility.yml',
-                        '.github/workflows/phpunit-tests.yml',
-                    ];
 
                     const headers = {
                         'Authorization': `Bearer ${token}`,
@@ -219,15 +219,6 @@
                             }
                         }`;
 
-                        const workflows = whitelist.map(fileName => ({
-                            id: fileName,
-                            name: fileName.split('/').pop().replace('.yml', '').replace(/-/g, ' '),
-                            fileName: fileName,
-                            statuses: {}
-                        }));
-
-                        this.workflows = workflows;
-
                         return fetch('https://api.github.com/graphql', {
                             method: 'POST',
                             headers: headers,
@@ -239,7 +230,7 @@
                             const checkSuites = branchData.checkSuites.nodes;
 
                             checkSuites.forEach(suite => {
-                                if ( ! whitelist.includes( suite.workflowRun?.file.path ) ) {
+                                if (!this.whitelist.includes(suite.workflowRun?.file.path)) {
                                     return;
                                 }
 
@@ -247,7 +238,7 @@
                                 const workflow = this.workflows.find(w => w.fileName === suite.workflowRun.file.path);
                                 if (workflow) {
                                     workflow.statuses[branch] = {
-                                        status: ( waiting.includes(suite.status) ) ? 'IN PROGRESS' : suite.conclusion,
+                                        status: (waiting.includes(suite.status)) ? 'IN PROGRESS' : suite.conclusion,
                                         date: new Date(suite.workflowRun?.updatedAt).toLocaleString()
                                     };
                                 }
@@ -323,6 +314,12 @@
                         this.apiKey = storedApiKey;
                         this.apiKeyInput = storedApiKey;
                         this.pollingActive = storedPollingActive !== 'false';
+                        this.workflows = this.whitelist.map(fileName => ({
+                            id: fileName,
+                            name: fileName.split('/').pop().replace('.yml', '').replace(/-/g, ' '),
+                            fileName: fileName,
+                            statuses: {}
+                        }));
                         this.fetchWorkflows();
                         this.startPolling();
                     }
