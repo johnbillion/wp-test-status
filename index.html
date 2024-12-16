@@ -202,6 +202,7 @@
                                                     checkSuites(first: 100) {
                                                         nodes {
                                                             workflowRun {
+                                                                updatedAt
                                                                 file {
                                                                     path
                                                                 }
@@ -245,7 +246,7 @@
                                 if (workflow) {
                                     workflow.statuses[branch] = {
                                         status: suite.conclusion,
-                                        date: new Date(branchData.committedDate).toLocaleString()
+                                        date: new Date(suite.workflowRun?.updatedAt).toLocaleString()
                                     };
                                 }
                             });
