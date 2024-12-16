@@ -102,11 +102,6 @@
             <p>The key does not need any specific permissions but must have an expiry of 90 days or less.</p>
         </div>
         <div x-show="errorMessage" style="color: red;" x-text="errorMessage"></div>
-        <div x-show="apiKey">
-            <div x-show="pollingActive">
-                Next poll in: <span x-text="countdown"></span> seconds
-            </div>
-        </div>
         <table x-show="apiKey">
             <thead>
                 <tr>
@@ -142,6 +137,9 @@
         <div x-show="apiKey">
             <label for="pollingToggle">Polling Active:</label>
             <input type="checkbox" id="pollingToggle" x-model="pollingActive" @change="togglePolling">
+        </div>
+        <div x-show="apiKey && pollingActive">
+            Next poll in: <span x-text="countdown"></span> seconds
         </div>
     </div>
 
