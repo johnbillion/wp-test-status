@@ -87,6 +87,7 @@
             width: 200px;
         }
     </style>
+    <link id="favicon" rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='green'/></svg>">
 </head>
 <body>
     <div x-data="githubActionsStatus" :class="{'centered': !apiKey}" class="container">
@@ -241,6 +242,8 @@
                                     };
                                 }
                             });
+
+                            this.updateFavicon();
                         })
                         .catch(error => {
                             this.errorMessage = error.message;
@@ -275,6 +278,14 @@
                         return this.workflows.some(workflow => workflow.statuses[item]?.status === 'FAILURE') ? 'header-failing' : '';
                     }
                     return '';
+                },
+                updateFavicon() {
+                    const hasFailing = this.workflows.some(workflow =>
+                        Object.values(workflow.statuses).some(status => status.status === 'FAILURE')
+                    );
+                    const favicon = document.getElementById('favicon');
+                    const color = hasFailing ? 'red' : 'green';
+                    favicon.href = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='${color}'/></svg>`;
                 },
                 startPolling() {
                     if (this.pollingActive) {
