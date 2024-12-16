@@ -200,16 +200,12 @@
                                         ... on Commit {
                                             history(first: 1) {
                                                 nodes {
-                                                    oid
                                                     checkSuites(first: 100) {
                                                         nodes {
                                                             workflowRun {
                                                                 file {
                                                                     path
                                                                 }
-                                                            }
-                                                            app {
-                                                                name
                                                             }
                                                             conclusion
                                                         }
