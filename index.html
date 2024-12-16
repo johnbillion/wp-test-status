@@ -207,6 +207,7 @@
                                                                     path
                                                                 }
                                                             }
+                                                            status
                                                             conclusion
                                                         }
                                                     }
@@ -242,10 +243,11 @@
                                     return;
                                 }
 
+                                const waiting = ['QUEUED', 'IN_PROGRESS'];
                                 const workflow = this.workflows.find(w => w.fileName === suite.workflowRun.file.path);
                                 if (workflow) {
                                     workflow.statuses[branch] = {
-                                        status: suite.conclusion,
+                                        status: ( waiting.includes(suite.status) ) ? 'IN PROGRESS' : suite.conclusion,
                                         date: new Date(suite.workflowRun?.updatedAt).toLocaleString()
                                     };
                                 }
@@ -268,6 +270,8 @@
                     } else if (status === 'FAILURE') {
                         return 'status-failing';
                     } else if (status === 'PENDING') {
+                        return 'status-in-progress';
+                    } else if (status === 'IN PROGRESS') {
                         return 'status-in-progress';
                     } else if (status === 'SKIPPED') {
                         return 'status-skipped';
