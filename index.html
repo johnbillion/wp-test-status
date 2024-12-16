@@ -124,7 +124,6 @@
                         <th :class="getHeaderClass(workflow, 'row')" scope="row">
                             <a :href="`https://github.com/wordpress/wordpress-develop/actions/workflows/${workflow.fileName}`" target="_blank">
                                 <div x-text="workflow.name"></div>
-                                <div x-text="workflow.fileName"></div>
                             </a>
                         </th>
                         <template x-for="branch in branches" :key="branch">
