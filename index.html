@@ -203,23 +203,15 @@
                                                     oid
                                                     checkSuites(first: 100) {
                                                         nodes {
+                                                            workflowRun {
+                                                                file {
+                                                                    path
+                                                                }
+                                                            }
                                                             app {
                                                                 name
                                                             }
                                                             conclusion
-                                                            checkRuns(first: 100) {
-                                                                nodes {
-                                                                    name
-                                                                    conclusion
-                                                                    checkSuite {
-                                                                        workflowRun {
-                                                                            file {
-                                                                                path
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                }
-                                                            }
                                                         }
                                                     }
                                                 }
@@ -250,20 +242,17 @@
                             const checkSuites = branchData.checkSuites.nodes;
 
                             checkSuites.forEach(suite => {
-                                let found = false;
-                                suite.checkRuns.nodes.forEach(run => {
-                                    if (found) return;
-                                    if (whitelist.includes( run.checkSuite.workflowRun.file.path )) {
-                                        const workflow = this.workflows.find(w => w.fileName === run.checkSuite.workflowRun.file.path);
-                                        if (workflow) {
-                                            workflow.statuses[branch] = {
-                                                status: suite.conclusion,
-                                                date: new Date(run.completedAt).toLocaleString()
-                                            };
-                                            found = true;
-                                        }
-                                    }
-                                });
+                                if ( ! whitelist.includes( suite.workflowRun?.file.path ) ) {
+                                    return;
+                                }
+
+                                const workflow = this.workflows.find(w => w.fileName === suite.workflowRun.file.path);
+                                if (workflow) {
+                                    workflow.statuses[branch] = {
+                                        status: suite.conclusion,
+                                        date: new Date(branchData.committedDate).toLocaleString()
+                                    };
+                                }
                             });
                         })
                         .catch(error => {
