@@ -15,6 +15,10 @@ This project provides a dashboard to monitor the status of GitHub Actions workfl
 2. Open `index.html` in your browser.
 3. Enter your GitHub API key and click "Set API Key".
 
+## Screenshot
+
+![Dashboard Screenshot](screenshot.png)
+
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
