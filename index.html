@@ -52,6 +52,7 @@
             background-color: red;
             color: white;
         }
+        .status-skipped,
         .status-in-progress {
             background-color: orange;
             color: white;
@@ -70,6 +71,7 @@
         .status-passing a,
         .status-failing a,
         .status-in-progress a,
+        .status-skipped a,
         .header-failing a {
             color: white;
         }
@@ -199,12 +201,25 @@
                                             history(first: 1) {
                                                 nodes {
                                                     oid
-                                                    committedDate
-                                                    status {
-                                                        contexts {
-                                                            context
-                                                            state
-                                                            createdAt
+                                                    checkSuites(first: 100) {
+                                                        nodes {
+                                                            app {
+                                                                name
+                                                            }
+                                                            conclusion
+                                                            checkRuns(first: 100) {
+                                                                nodes {
+                                                                    name
+                                                                    conclusion
+                                                                    checkSuite {
+                                                                        workflowRun {
+                                                                            file {
+                                                                                path
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -215,6 +230,15 @@
                             }
                         }`;
 
+                        const workflows = whitelist.map(fileName => ({
+                            id: fileName,
+                            name: fileName.split('/').pop().replace('.yml', '').replace(/-/g, ' '),
+                            fileName: fileName,
+                            statuses: {}
+                        }));
+
+                        this.workflows = workflows;
+
                         return fetch('https://api.github.com/graphql', {
                             method: 'POST',
                             headers: headers,
@@ -223,16 +247,23 @@
                         .then(response => response.json())
                         .then(data => {
                             const branchData = data.data.repository.ref.target.history.nodes[0];
-                            const statusContexts = branchData.status?.contexts || [];
+                            const checkSuites = branchData.checkSuites.nodes;
 
-                            statusContexts.forEach(context => {
-                                const workflow = this.workflows.find(w => w.fileName === context.context);
-                                if (workflow) {
-                                    workflow.statuses[branch] = {
-                                        status: context.state,
-                                        date: new Date(context.createdAt).toLocaleString()
-                                    };
-                                }
+                            checkSuites.forEach(suite => {
+                                let found = false;
+                                suite.checkRuns.nodes.forEach(run => {
+                                    if (found) return;
+                                    if (whitelist.includes( run.checkSuite.workflowRun.file.path )) {
+                                        const workflow = this.workflows.find(w => w.fileName === run.checkSuite.workflowRun.file.path);
+                                        if (workflow) {
+                                            workflow.statuses[branch] = {
+                                                status: suite.conclusion,
+                                                date: new Date(run.completedAt).toLocaleString()
+                                            };
+                                            found = true;
+                                        }
+                                    }
+                                });
                             });
                         })
                         .catch(error => {
@@ -253,6 +284,8 @@
                         return 'status-failing';
                     } else if (status === 'PENDING') {
                         return 'status-in-progress';
+                    } else if (status === 'SKIPPED') {
+                        return 'status-skipped';
                     } else {
                         return '';
                     }
